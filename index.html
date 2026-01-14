@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ultima-like RPG</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div id="hud">
+      <div class="title">Ultima-like RPG Prototype</div>
+      <div class="tips">WASD / Arrows move, Shift run, Space jump, Z swing/boat, E equip, X crouch, F edit</div>
+    </div>
+    <div id="editor">
+      <div class="row">
+        <button id="toggle-edit">Edit: Off</button>
+        <button id="toggle-base">Base: Off</button>
+        <button id="save-world">Save</button>
+        <label class="brush">
+          Brush
+          <input id="brush-size" type="range" min="1" max="5" value="1" />
+        </label>
+      </div>
+      <div id="save-toast">Saved</div>
+      <div id="palette"></div>
+      <canvas id="minimap" width="200" height="200"></canvas>
+    </div>
+    <canvas id="game"></canvas>
+    <script src="renderer.js"></script>
+  </body>
+</html>
