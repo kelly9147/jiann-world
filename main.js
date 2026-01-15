@@ -47,7 +47,7 @@ app.on("window-all-closed", () => {
 
 ipcMain.handle("load-world", async () => {
   const fs = require("fs");
-  const filePath = path.join(app.getPath("userData"), WORLD_FILE);
+  const filePath = path.join(__dirname, "data", WORLD_FILE);
   try {
     if (!fs.existsSync(filePath)) return null;
     return fs.readFileSync(filePath, "utf8");
@@ -58,8 +58,12 @@ ipcMain.handle("load-world", async () => {
 
 ipcMain.handle("save-world", async (_event, data) => {
   const fs = require("fs");
-  const filePath = path.join(app.getPath("userData"), WORLD_FILE);
+  const dataDir = path.join(__dirname, "data");
+  const filePath = path.join(dataDir, WORLD_FILE);
   try {
+    if (!fs.existsSync(dataDir)) {
+      fs.mkdirSync(dataDir, { recursive: true });
+    }
     fs.writeFileSync(filePath, data, "utf8");
     return true;
   } catch (err) {
