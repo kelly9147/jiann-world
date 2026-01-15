@@ -1,11 +1,10 @@
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
-
+// --- Constants ---
 const TILE_SIZE = 32;
 const WORLD_SIZE = 1024;
 const BASE_SPEED = 5;
+const WORLD_VERSION = "v8";
 
-const tileTypes = {
+const TILE_TYPES = {
   sea: { color: "#1b3d6d" },
   river: { color: "#2c6fba" },
   grass: { color: "#2e7d32" },
@@ -26,45 +25,10 @@ const tileTypes = {
   furniture: { color: "#6f5a45" }
 };
 
-const tileset = {};
-const input = new Set();
-const towns = [];
-const roads = new Map();
-const boats = [];
-const minimap = {
-  canvas: null,
-  ctx: null,
-  size: 200,
-  dirty: true,
-  lastDraw: 0
-};
-const editor = {
-  enabled: false,
-  painting: false,
-  brushSize: 1,
-  selected: "tree",
-  editBase: false
-};
-
 const TILE_INDEX = {
-  sea: 0,
-  river: 1,
-  grass: 2,
-  field: 3,
-  forest: 4,
-  tree: 5,
-  road: 6,
-  portNW: 7,
-  portNE: 8,
-  portSW: 9,
-  portSE: 10,
-  mountain: 11,
-  houseWall: 12,
-  houseFloor: 13,
-  houseDoor: 14,
-  bed: 15,
-  kitchen: 16,
-  furniture: 17
+  sea: 0, river: 1, grass: 2, field: 3, forest: 4, tree: 5, road: 6,
+  portNW: 7, portNE: 8, portSW: 9, portSE: 10, mountain: 11,
+  houseWall: 12, houseFloor: 13, houseDoor: 14, bed: 15, kitchen: 16, furniture: 17
 };
 
 const INDEX_TILE = Object.keys(TILE_INDEX).reduce((acc, key) => {
@@ -72,21 +36,18 @@ const INDEX_TILE = Object.keys(TILE_INDEX).reduce((acc, key) => {
   return acc;
 }, {});
 
+const SOLID_TILES = ["houseWall", "mountain", "tree", "furniture", "kitchen", "bed"];
+
+// --- Game State ---
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
 let worldMap = null;
-let worldSeed = 0;
 let baseMap = null;
-const WORLD_VERSION = "v8";
+let worldSeed = 0;
 
-const player = {
-  x: WORLD_SIZE / 2,
-  y: WORLD_SIZE / 2
-};
-
-const playerPrev = {
-  x: WORLD_SIZE / 2,
-  y: WORLD_SIZE / 2
-};
-
+const player = { x: WORLD_SIZE / 2, y: WORLD_SIZE / 2 };
+const playerPrev = { x: WORLD_SIZE / 2, y: WORLD_SIZE / 2 };
 let playerSpeed = 0;
 let jumpOffset = 0;
 let jumpVelocity = 0;
@@ -96,10 +57,23 @@ let crouched = false;
 let onBoat = false;
 let activeBoat = -1;
 
-const camera = {
-  x: 0,
-  y: 0
+const camera = { x: 0, y: 0 };
+const input = new Set();
+const towns = [];
+const roads = new Map();
+const boats = [];
+const tileset = {};
+
+const minimap = {
+  canvas: null, ctx: null, size: 200, dirty: true, lastDraw: 0
 };
+
+const editor = {
+  enabled: false, painting: false, brushSize: 1, selected: "tree", editBase: false
+};
+
+
+
 
 function resize() {
   const dpr = window.devicePixelRatio || 1;
@@ -218,25 +192,30 @@ function buildRoads() {
   });
 }
 
+// --- Tile & Collision Helpers ---
 function tileAt(x, y) {
   if (x < 0 || y < 0 || x >= WORLD_SIZE || y >= WORLD_SIZE) return "sea";
-  if (worldMap) {
-    return INDEX_TILE[worldMap[y * WORLD_SIZE + x]] || "sea";
-  }
+  if (worldMap) return INDEX_TILE[worldMap[y * WORLD_SIZE + x]] || "sea";
   return "grass";
 }
 
-function isWater(type) {
-  return type === "sea" || type === "river";
+function isWater(type) { return type === "sea" || type === "river"; }
+function isLand(type) { return !isWater(type); }
+function isPortTile(type) { return type.startsWith("port"); }
+function isHouseTile(type) {
+  return ["houseWall", "houseFloor", "houseDoor", "bed", "kitchen", "furniture"].includes(type);
 }
 
-function isLand(type) {
-  return !isWater(type);
+function isWalkableOnFoot(type) {
+  return !isWater(type) && !SOLID_TILES.includes(type);
 }
 
-function isPortTile(type) {
-  return type === "portNW" || type === "portNE" || type === "portSW" || type === "portSE";
+function isWalkable(x, y) {
+  const type = tileAt(Math.floor(x), Math.floor(y));
+  if (onBoat) return isWater(type) || isPortTile(type);
+  return isWalkableOnFoot(type);
 }
+
 
 function baseTileAt(x, y) {
   if (!baseMap) return "grass";
@@ -270,6 +249,8 @@ function eraseBaseTile(x, y) {
   worldMap[y * WORLD_SIZE + x] = TILE_INDEX.grass;
 }
 
+let seaLevelThreshold = 0.24;
+
 function generateBaseTerrain(seed) {
   baseMap = new Uint8Array(WORLD_SIZE * WORLD_SIZE);
   worldMap = new Uint8Array(WORLD_SIZE * WORLD_SIZE);
@@ -284,8 +265,8 @@ function generateBaseTerrain(seed) {
       const treeScatter = hash2d(x, y, 5851 + seed);
 
       let type = "grass";
-      if (height < 0.24) type = "sea";
-      else if (height < 0.34 && moisture > 0.52) type = "river";
+      if (height < seaLevelThreshold) type = "sea";
+      else if (height < seaLevelThreshold + 0.1 && moisture > 0.52) type = "river";
       else if (riverNoise > 0.86 && height < 0.66) type = "river";
       else if (height > 0.7) type = "mountain";
       else if (moisture > 0.56) type = "field";
@@ -304,222 +285,144 @@ function generateBaseTerrain(seed) {
   }
 }
 
+// --- World Generation Helpers ---
+const HOUSE_WIDTH = 10;
+const HOUSE_HEIGHT = 6;
+
+function isBuildableBase(x, y) {
+  const base = tileAt(x, y);
+  return isLand(base) && base !== "mountain" && base !== "road" && !isPortTile(base);
+}
+
+function canPlaceHouse(startX, startY) {
+  if (startX < 0 || startY < 0 || startX + HOUSE_WIDTH > WORLD_SIZE || startY + HOUSE_HEIGHT > WORLD_SIZE) return false;
+  for (let dy = 0; dy < HOUSE_HEIGHT; dy++) {
+    for (let dx = 0; dx < HOUSE_WIDTH; dx++) {
+      if (!isBuildableBase(startX + dx, startY + dy)) return false;
+    }
+  }
+  return true;
+}
+
+function placeHouse(startX, startY, doorSide, town) {
+  for (let dy = 0; dy < HOUSE_HEIGHT; dy++) {
+    for (let dx = 0; dx < HOUSE_WIDTH; dx++) {
+      const isWall = dx === 0 || dy === 0 || dx === HOUSE_WIDTH - 1 || dy === HOUSE_HEIGHT - 1;
+      setTile(startX + dx, startY + dy, isWall ? "houseWall" : "houseFloor");
+    }
+  }
+
+  let doorX = startX + Math.floor(HOUSE_WIDTH / 2);
+  let doorY = startY + HOUSE_HEIGHT - 1;
+  if (doorSide === "north") doorY = startY;
+  else if (doorSide === "west") { doorX = startX; doorY = startY + Math.floor(HOUSE_HEIGHT / 2); }
+  else if (doorSide === "east") { doorX = startX + HOUSE_WIDTH - 1; doorY = startY + Math.floor(HOUSE_HEIGHT / 2); }
+  setTile(doorX, doorY, "houseDoor");
+
+  const interior = [];
+  for (let dy = 1; dy < HOUSE_HEIGHT - 1; dy++) {
+    for (let dx = 1; dx < HOUSE_WIDTH - 1; dx++) interior.push({ x: startX + dx, y: startY + dy });
+  }
+
+  const placeItem = (type, seedOffset) => {
+    const pick = Math.floor(hash2d(town.x + seedOffset, town.y + seedOffset, 9100 + worldSeed) * interior.length);
+    const spot = interior[pick];
+    if (spot) setTile(spot.x, spot.y, type);
+  };
+  placeItem("bed", 11);
+  placeItem("kitchen", 23);
+  placeItem("furniture", 37);
+}
+
+function findRoadNear(town) {
+  for (let r = 2; r <= 16; r++) {
+    for (let dy = -r; dy <= r; dy++) {
+      for (let dx = -r; dx <= r; dx++) {
+        const x = town.x + dx, y = town.y + dy;
+        if (roads.has(`${x},${y}`)) return { x, y };
+      }
+    }
+  }
+  return null;
+}
+
+function findCoastNear(town) {
+  for (let r = 3; r <= 24; r++) {
+    for (let dy = -r; dy <= r; dy++) {
+      for (let dx = -r; dx <= r; dx++) {
+        const x = town.x + dx, y = town.y + dy;
+        const type = tileAt(x, y);
+        if (!isLand(type) || type === "mountain" || roads.has(`${x},${y}`)) continue;
+        const neighbors = [{ x: x + 1, y }, { x: x - 1, y }, { x, y: y + 1 }, { x, y: y - 1 }];
+        const water = neighbors.find(p => isWater(tileAt(p.x, p.y)));
+        if (water) return { x, y, water };
+      }
+    }
+  }
+  return null;
+}
+
+function placePort(startX, startY) {
+  const can = (sx, sy) => {
+    for (let dy = 0; dy < 2; dy++) {
+      for (let dx = 0; dx < 2; dx++) if (!isBuildableBase(sx + dx, sy + dy)) return false;
+    }
+    return true;
+  };
+  if (can(startX, startY)) {
+    setTile(startX, startY, "portNW"); setTile(startX + 1, startY, "portNE");
+    setTile(startX, startY + 1, "portSW"); setTile(startX + 1, startY + 1, "portSE");
+  } else {
+    setTile(startX, startY, "portNW");
+  }
+}
+
 function applyTownsAndRoads(seed) {
-  towns.length = 0;
-  roads.clear();
-  boats.length = 0;
+  towns.length = 0; roads.clear(); boats.length = 0;
   generateTowns(seed);
   buildRoads();
-
-  const HOUSE_WIDTH = 10;
-  const HOUSE_HEIGHT = 6;
-
-  function isHouseTile(type) {
-    return (
-      type === "houseWall" ||
-      type === "houseFloor" ||
-      type === "houseDoor" ||
-      type === "bed" ||
-      type === "kitchen" ||
-      type === "furniture"
-    );
-  }
-
-  function isBuildableBase(x, y) {
-    if (x < 0 || y < 0 || x >= WORLD_SIZE || y >= WORLD_SIZE) return false;
-    const base = tileAt(x, y);
-    return (
-      base !== "sea" &&
-      base !== "river" &&
-      base !== "mountain" &&
-      base !== "road" &&
-      !isPortTile(base)
-    );
-  }
-
-  function canPlaceHouse(startX, startY) {
-    if (startX < 0 || startY < 0) return false;
-    if (startX + HOUSE_WIDTH > WORLD_SIZE || startY + HOUSE_HEIGHT > WORLD_SIZE) return false;
-    for (let dy = 0; dy < HOUSE_HEIGHT; dy += 1) {
-      for (let dx = 0; dx < HOUSE_WIDTH; dx += 1) {
-        if (!isBuildableBase(startX + dx, startY + dy)) return false;
-      }
-    }
-    return true;
-  }
-
-  function placeHouse(startX, startY, doorSide, town) {
-    for (let dy = 0; dy < HOUSE_HEIGHT; dy += 1) {
-      for (let dx = 0; dx < HOUSE_WIDTH; dx += 1) {
-        const x = startX + dx;
-        const y = startY + dy;
-        const isWall =
-          dx === 0 || dy === 0 || dx === HOUSE_WIDTH - 1 || dy === HOUSE_HEIGHT - 1;
-        setTile(x, y, isWall ? "houseWall" : "houseFloor");
-      }
-    }
-
-    let doorX = startX + Math.floor(HOUSE_WIDTH / 2);
-    let doorY = startY + HOUSE_HEIGHT - 1;
-    if (doorSide === "north") doorY = startY;
-    if (doorSide === "west") {
-      doorX = startX;
-      doorY = startY + Math.floor(HOUSE_HEIGHT / 2);
-    }
-    if (doorSide === "east") {
-      doorX = startX + HOUSE_WIDTH - 1;
-      doorY = startY + Math.floor(HOUSE_HEIGHT / 2);
-    }
-    setTile(doorX, doorY, "houseDoor");
-
-    const interior = [];
-    for (let dy = 1; dy < HOUSE_HEIGHT - 1; dy += 1) {
-      for (let dx = 1; dx < HOUSE_WIDTH - 1; dx += 1) {
-        interior.push({ x: startX + dx, y: startY + dy });
-      }
-    }
-
-    function placeItem(type, seedOffset) {
-      const pick =
-        Math.floor(hash2d(town.x + seedOffset, town.y + seedOffset, 9100 + seed) *
-        interior.length);
-      const spot = interior[pick];
-      if (spot) setTile(spot.x, spot.y, type);
-    }
-
-    placeItem("bed", 11);
-    placeItem("kitchen", 23);
-    placeItem("furniture", 37);
-  }
-
-  function findRoadNear(town) {
-    for (let r = 2; r <= 16; r += 1) {
-      for (let dy = -r; dy <= r; dy += 1) {
-        for (let dx = -r; dx <= r; dx += 1) {
-          const x = town.x + dx;
-          const y = town.y + dy;
-          if (roads.has(`${x},${y}`)) return { x, y };
-        }
-      }
-    }
-    return null;
-  }
-
-  function findCoastNear(town) {
-    for (let r = 3; r <= 24; r += 1) {
-      for (let dy = -r; dy <= r; dy += 1) {
-        for (let dx = -r; dx <= r; dx += 1) {
-          const x = town.x + dx;
-          const y = town.y + dy;
-          const type = tileAt(x, y);
-          if (!isLand(type) || type === "mountain") continue;
-          if (roads.has(`${x},${y}`)) continue;
-          const neighbors = [
-            { x: x + 1, y },
-            { x: x - 1, y },
-            { x, y: y + 1 },
-            { x, y: y - 1 }
-          ];
-          const waterNeighbor = neighbors.find((pos) => isWater(tileAt(pos.x, pos.y)));
-          if (waterNeighbor) return { x, y, water: waterNeighbor };
-        }
-      }
-    }
-    return null;
-  }
-
-  function canPlacePort(startX, startY) {
-    for (let dy = 0; dy < 2; dy += 1) {
-      for (let dx = 0; dx < 2; dx += 1) {
-        if (!isBuildableBase(startX + dx, startY + dy)) return false;
-      }
-    }
-    return true;
-  }
-
-  function placePort(startX, startY) {
-    setTile(startX, startY, "portNW");
-    setTile(startX + 1, startY, "portNE");
-    setTile(startX, startY + 1, "portSW");
-    setTile(startX + 1, startY + 1, "portSE");
-  }
 
   for (const town of towns) {
     let placed = false;
     const road = findRoadNear(town);
     if (road) {
-      const candidates = [
-        { side: "north", doorX: road.x, doorY: road.y + 1 },
-        { side: "south", doorX: road.x, doorY: road.y - 1 },
-        { side: "west", doorX: road.x + 1, doorY: road.y },
-        { side: "east", doorX: road.x - 1, doorY: road.y }
+      const sides = [
+        { s: "north", x: road.x, y: road.y + 1 }, { s: "south", x: road.x, y: road.y - 1 },
+        { s: "west", x: road.x + 1, y: road.y }, { s: "east", x: road.x - 1, y: road.y }
       ];
-      for (const candidate of candidates) {
-        let startX = candidate.doorX - Math.floor(HOUSE_WIDTH / 2);
-        let startY = candidate.doorY - (HOUSE_HEIGHT - 1);
-        if (candidate.side === "north") startY = candidate.doorY;
-        if (candidate.side === "west") {
-          startX = candidate.doorX;
-          startY = candidate.doorY - Math.floor(HOUSE_HEIGHT / 2);
-        }
-        if (candidate.side === "east") {
-          startX = candidate.doorX - (HOUSE_WIDTH - 1);
-          startY = candidate.doorY - Math.floor(HOUSE_HEIGHT / 2);
-        }
+      for (const c of sides) {
+        let sx = c.x - Math.floor(HOUSE_WIDTH / 2), sy = c.y - (HOUSE_HEIGHT - 1);
+        if (c.s === "north") sy = c.y;
+        else if (c.s === "west") { sx = c.x; sy = c.y - Math.floor(HOUSE_HEIGHT / 2); }
+        else if (c.s === "east") { sx = c.x - (HOUSE_WIDTH - 1); sy = c.y - Math.floor(HOUSE_HEIGHT / 2); }
 
-        if (canPlaceHouse(startX, startY)) {
-          placeHouse(startX, startY, candidate.side, town);
-          placed = true;
-          break;
+        if (canPlaceHouse(sx, sy)) {
+          placeHouse(sx, sy, c.s, town);
+          placed = true; break;
         }
       }
     }
-
     if (!placed) {
-      const startX = town.x - Math.floor(HOUSE_WIDTH / 2);
-      const startY = town.y - Math.floor(HOUSE_HEIGHT / 2);
-      if (canPlaceHouse(startX, startY)) {
-        placeHouse(startX, startY, "south", town);
-      }
+      const sx = town.x - Math.floor(HOUSE_WIDTH / 2), sy = town.y - Math.floor(HOUSE_HEIGHT / 2);
+      if (canPlaceHouse(sx, sy)) placeHouse(sx, sy, "south", town);
     }
 
     const coast = findCoastNear(town);
-    if (coast) {
-      const base = tileAt(coast.x, coast.y);
-      if (isLand(base) && !isHouseTile(base)) {
-        let portPlaced = false;
-        const portCandidates = [
-          { x: coast.x, y: coast.y },
-          { x: coast.x - 1, y: coast.y },
-          { x: coast.x, y: coast.y - 1 },
-          { x: coast.x - 1, y: coast.y - 1 }
-        ];
-        for (const candidate of portCandidates) {
-          if (canPlacePort(candidate.x, candidate.y)) {
-            placePort(candidate.x, candidate.y);
-            portPlaced = true;
-            break;
-          }
-        }
-        if (!portPlaced) {
-          setTile(coast.x, coast.y, "portNW");
-        }
-        const exists = boats.some(
-          (boat) => boat.x === coast.water.x && boat.y === coast.water.y
-        );
-        if (!exists) boats.push({ x: coast.water.x, y: coast.water.y });
+    if (coast && isLand(tileAt(coast.x, coast.y)) && !isHouseTile(tileAt(coast.x, coast.y))) {
+      placePort(coast.x, coast.y);
+      if (!boats.some(b => b.x === coast.water.x && b.y === coast.water.y)) {
+        boats.push({ x: coast.water.x, y: coast.water.y });
       }
     }
   }
 
   roads.forEach((_, key) => {
-    const [x, y] = key.split(",").map((value) => Number(value));
+    const [x, y] = key.split(",").map(Number);
     const type = tileAt(x, y);
-    if (type !== "sea" && type !== "river" && !isHouseTile(type) && !isPortTile(type)) {
-      setTile(x, y, "road");
-    }
+    if (!isWater(type) && !isHouseTile(type) && !isPortTile(type)) setTile(x, y, "road");
   });
 }
+
 
 function encodeMap(buffer) {
   const chunkSize = 0x8000;
@@ -938,12 +841,17 @@ function drawBoat(screenX, screenY) {
   ctx.fillRect(x - 6 * s, y + 2 * s, 12 * s, 4 * s);
 }
 
+function isWalkableOnFoot(type) {
+  const solids = ["houseWall", "mountain", "tree", "furniture", "kitchen", "bed"];
+  return !isWater(type) && !solids.includes(type);
+}
+
 function isWalkable(x, y) {
   const type = tileAt(Math.floor(x), Math.floor(y));
   if (onBoat) {
-    return isWater(type) || type === "port";
+    return isWater(type) || isPortTile(type);
   }
-  return !isWater(type);
+  return isWalkableOnFoot(type);
 }
 
 function findNearbyBoat(x, y, radius = 1.5) {
@@ -964,7 +872,7 @@ function tryBoardBoat() {
   if (idx === -1) return false;
   const boat = boats[idx];
   const tile = tileAt(boat.x, boat.y);
-  if (!isWater(tile) && tile !== "port") return false;
+  if (!isWater(tile) && !isPortTile(tile)) return false;
   onBoat = true;
   activeBoat = idx;
   player.x = boat.x;
@@ -982,7 +890,7 @@ function tryDisembark() {
     { x: px, y: py + 1 },
     { x: px, y: py - 1 }
   ];
-  const land = candidates.find((pos) => !isWater(tileAt(pos.x, pos.y)));
+  const land = candidates.find((pos) => isWalkableOnFoot(tileAt(pos.x, pos.y)));
   if (!land) return false;
   onBoat = false;
   activeBoat = -1;
@@ -1303,4 +1211,19 @@ function hexToRgb(hex) {
   const g = parseInt(value.slice(2, 4), 16);
   const b = parseInt(value.slice(4, 6), 16);
   return { r, g, b };
+}
+
+const seaInput = document.getElementById("sea-level");
+if (seaInput) {
+  seaInput.addEventListener("input", (e) => {
+    seaLevelThreshold = parseInt(e.target.value, 10) / 100;
+  });
+}
+
+const regenBtn = document.getElementById("regen-world");
+if (regenBtn) {
+  regenBtn.addEventListener("click", () => {
+    generateNewWorld();
+    minimap.dirty = true;
+  });
 }
