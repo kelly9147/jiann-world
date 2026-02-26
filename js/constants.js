@@ -1,7 +1,7 @@
 export const TILE_SIZE = 32;
 export const WORLD_SIZE = 1024;
 export const BASE_SPEED = 5;
-export const WORLD_VERSION = "v8";
+export const WORLD_VERSION = "v10";
 export const HOUSE_WIDTH = 10;
 export const HOUSE_HEIGHT = 6;
 

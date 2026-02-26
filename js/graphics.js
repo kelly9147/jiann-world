@@ -254,7 +254,6 @@ export function buildPalette() {
         "erase",
         "grass",
         "field",
-        "forest",
         "tree",
         "road",
         "portNW",

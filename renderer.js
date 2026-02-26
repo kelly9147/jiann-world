@@ -390,9 +390,23 @@ window.addEventListener("keyup", (event) => {
 
 window.addEventListener("resize", resize);
 
-function startGame() {
+function exitGame() {
+  if (document.fullscreenElement) {
+    document.exitFullscreen().catch(err => console.log(err));
+  }
+  document.getElementById("game-container").style.display = "none";
+  document.getElementById("home-screen").style.display = "flex";
+}
+
+function startGame(useFullscreen = false) {
   document.getElementById("home-screen").style.display = "none";
   document.getElementById("game-container").style.display = "block";
+
+  if (useFullscreen && document.documentElement.requestFullscreen) {
+    document.documentElement.requestFullscreen().catch((err) => {
+      console.log("Error attempting to enable fullscreen:", err);
+    });
+  }
 
   initState();
   resize();
@@ -411,8 +425,13 @@ function startGame() {
 function initApp() {
   const btn1 = document.getElementById("start-btn-1");
   const btn2 = document.getElementById("start-btn-2");
-  if (btn1) btn1.addEventListener("click", startGame);
-  if (btn2) btn2.addEventListener("click", startGame);
+  if (btn1) btn1.addEventListener("click", () => startGame(true));
+  if (btn2) btn2.addEventListener("click", () => startGame(true));
+
+  const exitBtn = document.getElementById("exit-btn");
+  if (exitBtn) {
+    exitBtn.addEventListener("click", exitGame);
+  }
 }
 
 if (document.readyState === "loading") {
@@ -518,6 +537,13 @@ function setupUI() {
     regenBtn.addEventListener("click", () => {
       generateNewWorld();
       state.minimap.dirty = true;
+    });
+  }
+
+  const minimapCanvas = document.getElementById("minimap");
+  if (minimapCanvas) {
+    minimapCanvas.addEventListener("click", () => {
+      minimapCanvas.classList.toggle("expanded");
     });
   }
 }

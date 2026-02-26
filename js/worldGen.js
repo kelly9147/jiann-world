@@ -114,9 +114,8 @@ export function generateBaseTerrain(seed) {
             else if (riverNoise > 0.86 && height < 0.66) type = "river";
             else if (height > 0.7) type = "mountain";
             else if (moisture > 0.56) type = "field";
-            else if (moisture > 0.45 && forestNoise > 0.4) type = "forest";
 
-            if (type === "grass" || type === "field" || type === "forest") {
+            if (type === "grass" || type === "field") {
                 const clustered = treeCluster > 0.45 && treeScatter > 0.25;
                 const scattered = treeNoise > 0.42 || treeScatter > 0.7;
                 if (clustered || scattered) type = "tree";
@@ -179,7 +178,16 @@ export function buildRoads() {
             } else if (dy !== 0) {
                 y += dy;
             }
-            paintRoadBrush(x, y, 0);
+
+            // Draw a slightly thicker path near towns to ensure it meets the houses
+            const distToA = Math.hypot(x - a.x, y - a.y);
+            const distToB = Math.hypot(x - b.x, y - b.y);
+
+            if (distToA < 8 || distToB < 8) {
+                paintRoadBrush(x, y, 1);
+            } else {
+                paintRoadBrush(x, y, 0);
+            }
             steps += 1;
         }
     });
@@ -196,10 +204,22 @@ export function placePort(startX, startY) {
 
             const canPlace = (tx, ty, s) => {
                 if (tx < 0 || ty < 0 || tx + s >= WORLD_SIZE || ty + s >= WORLD_SIZE) return false;
-                for (let dy = 0; dy < s; dy++) {
-                    for (let dx = 0; dx < s; dx++) {
-                        const tile = tileAt(tx + dx, ty + dy);
-                        if (isWater(tile) || tile === "mountain" || tile === "road" || isHouseTile(tile)) return false;
+                for (let dy = -4; dy < s + 4; dy++) {
+                    for (let dx = -4; dx < s + 4; dx++) {
+                        const checkX = tx + dx;
+                        const checkY = ty + dy;
+                        if (checkX < 0 || checkY < 0 || checkX >= WORLD_SIZE || checkY >= WORLD_SIZE) continue;
+                        const tile = tileAt(checkX, checkY);
+
+                        // Core area constraints (the actual port footprint)
+                        if (dx >= 0 && dx < s && dy >= 0 && dy < s) {
+                            if (isWater(tile) || tile === "mountain" || tile === "road" || isHouseTile(tile)) return false;
+                        }
+
+                        // Buffer constraints (keep distance from house doors)
+                        if (tile === "houseDoor") {
+                            return false;
+                        }
                     }
                 }
                 return true;
@@ -285,8 +305,31 @@ export function applyTownsAndRoads(seed) {
     state.roads.forEach((_, key) => {
         const [x, y] = key.split(",").map(Number);
         const type = tileAt(x, y);
-        if (!isWater(type) && !isHouseTile(type) && !isPortTile(type)) setTile(x, y, "road");
+        // Ensure roads don't wipe out houses, water, or ports, but allowed to connect exactly to the house bounds.
+        if (!isWater(type) && !isHouseTile(type) && !isPortTile(type)) {
+            setTile(x, y, "road");
+        }
     });
+
+    // Final pass: Ensure a road tile sits exactly adjacent to the house door
+    for (const town of state.towns) {
+        for (let dy = -10; dy <= 10; dy++) {
+            for (let dx = -10; dx <= 10; dx++) {
+                const x = town.x + dx;
+                const y = town.y + dy;
+                if (tileAt(x, y) === "houseDoor") {
+                    // Check neighbors and force a road right outside the door
+                    const nb = [[x, y + 1], [x, y - 1], [x - 1, y], [x + 1, y]];
+                    nb.forEach(([nx, ny]) => {
+                        const nType = tileAt(nx, ny);
+                        if (nType === "grass" || nType === "field" || nType === "tree" || nType === "road") {
+                            setTile(nx, ny, "road");
+                        }
+                    });
+                }
+            }
+        }
+    }
 }
 
 function randomSeed() {

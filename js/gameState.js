@@ -54,12 +54,14 @@ export function isHouseTile(type) {
 }
 
 export function isWalkableOnFoot(type) {
-    return !isWater(type) && !SOLID_TILES.includes(type);
+    // Cannot step on: trees, mountains, rivers, sea, house walls
+    const blocked = ["tree", "mountain", "river", "sea", "houseWall"];
+    return !blocked.includes(type);
 }
 
 export function isWalkable(x, y) {
     const type = tileAt(Math.floor(x), Math.floor(y));
-    if (state.onBoat) return isWater(type) || isPortTile(type);
+    if (state.onBoat) return isWater(type); // Boats can ONLY travel on water, not land or ports
     return isWalkableOnFoot(type);
 }
 
