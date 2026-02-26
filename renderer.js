@@ -173,6 +173,7 @@ function resize() {
   state.canvas.width = Math.floor(window.innerWidth * dpr);
   state.canvas.height = Math.floor(window.innerHeight * dpr);
   state.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  state.ctx.imageSmoothingEnabled = false;
 }
 
 function update(dt) {
@@ -390,6 +391,9 @@ window.addEventListener("keyup", (event) => {
 window.addEventListener("resize", resize);
 
 function startGame() {
+  document.getElementById("home-screen").style.display = "none";
+  document.getElementById("game-container").style.display = "block";
+
   initState();
   resize();
   initWorld().then(() => {
@@ -404,10 +408,17 @@ function startGame() {
   });
 }
 
+function initApp() {
+  const btn1 = document.getElementById("start-btn-1");
+  const btn2 = document.getElementById("start-btn-2");
+  if (btn1) btn1.addEventListener("click", startGame);
+  if (btn2) btn2.addEventListener("click", startGame);
+}
+
 if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", startGame);
+  document.addEventListener("DOMContentLoaded", initApp);
 } else {
-  startGame();
+  initApp();
 }
 
 if (window.worldApi) {

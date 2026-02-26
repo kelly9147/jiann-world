@@ -1,13 +1,14 @@
-@font-face {
-  font-family: "Alegreya";
-  src: local("Alegreya");
-}
-
 :root {
-  --bg: #0b0f14;
-  --hud-bg: rgba(12, 16, 22, 0.75);
-  --hud-border: rgba(255, 255, 255, 0.12);
-  --hud-text: #e9e3d6;
+  --bg: #29b6f6;
+  /* Ocean blue background color to match edge tiles */
+  --hud-bg: #d32f2f;
+  /* Festival red */
+  --hud-border: #b71c1c;
+  /* Dark red border */
+  --hud-text: #ffffff;
+  /* White text for contrast on red */
+  --btn-bg: #ffffff;
+  --btn-text: #d32f2f;
 }
 
 * {
@@ -19,51 +20,65 @@ body {
   width: 100%;
   height: 100%;
   margin: 0;
-  background: radial-gradient(circle at 10% 10%, #111a26, #05070a 55%, #030405);
+  background: var(--bg);
   overflow: hidden;
-  font-family: "Alegreya", Georgia, "Times New Roman", serif;
+  font-family: "DotGothic16", sans-serif;
   color: var(--hud-text);
+  /* Optional: soft text shadow for readability */
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.3);
 }
 
 #game {
   width: 100%;
   height: 100%;
   display: block;
+  image-rendering: pixelated;
 }
 
 #hud {
   position: absolute;
   top: 16px;
   left: 16px;
-  padding: 10px 14px;
-  border: 1px solid var(--hud-border);
+  padding: 16px 24px;
+  border: 4px solid var(--hud-border);
+  border-radius: 16px;
   background: var(--hud-bg);
-  backdrop-filter: blur(6px);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
-  letter-spacing: 0.3px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  line-height: 1.5;
 }
 
 #hud .title {
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 20px;
+  margin-bottom: 8px;
+  color: #ffeb3b;
+  /* Golden yellow title */
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.4);
 }
 
 #hud .tips {
-  font-size: 12px;
-  opacity: 0.8;
+  font-size: 14px;
 }
 
 #editor {
   position: absolute;
   right: 16px;
   top: 16px;
-  padding: 10px 12px;
-  border: 1px solid var(--hud-border);
+  padding: 16px;
+  border: 4px solid var(--hud-border);
+  border-radius: 16px;
   background: var(--hud-bg);
-  backdrop-filter: blur(6px);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
-  max-width: 320px;
-  font-size: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  max-width: 340px;
+  font-size: 14px;
+}
+
+#editor input[type="range"] {
+  accent-color: #ffeb3b;
+}
+
+#editor button {
+  font-family: inherit;
+  font-size: 14px;
 }
 
 #editor .row {
@@ -73,26 +88,36 @@ body {
   margin-bottom: 8px;
 }
 
-#toggle-edit {
-  background: #1c2b3a;
-  color: var(--hud-text);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  padding: 6px 8px;
+#toggle-edit,
+#toggle-base,
+#save-world,
+#regen-world {
+  background: var(--btn-bg);
+  color: var(--btn-text);
+  border: 2px solid #b71c1c;
+  border-radius: 8px;
+  padding: 6px 12px;
   cursor: pointer;
+  font-weight: bold;
+  text-shadow: none;
+  transition: all 0.1s;
+}
+
+#toggle-edit:hover,
+#toggle-base:hover,
+#save-world:hover,
+#regen-world:hover {
+  background: #ffeb3b;
+  /* Hover turns gold */
+  color: #b71c1c;
 }
 
 #toggle-edit.active,
 #toggle-base.active {
-  background: #365a2b;
-}
-
-#toggle-base,
-#save-world {
-  background: #1c2b3a;
-  color: var(--hud-text);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  padding: 6px 8px;
-  cursor: pointer;
+  background: #4caf50;
+  /* Green for active */
+  color: #ffffff;
+  border-color: #2e7d32;
 }
 
 #editor .brush {
@@ -111,36 +136,37 @@ body {
   margin-top: 10px;
   width: 200px;
   height: 200px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 4px solid var(--hud-border);
+  border-radius: 12px;
   image-rendering: pixelated;
   background: rgba(0, 0, 0, 0.25);
 }
 
 #save-toast {
   margin-bottom: 8px;
-  padding: 6px 8px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(30, 40, 55, 0.8);
-  color: var(--hud-text);
-  font-size: 12px;
+  padding: 8px 16px;
+  border: 2px solid #388e3c;
+  border-radius: 8px;
+  background: #4caf50;
+  color: #ffffff;
+  font-size: 14px;
   opacity: 0;
-  transform: translateY(-6px);
-  transition: opacity 0.2s ease, transform 0.2s ease;
   pointer-events: none;
+  font-weight: bold;
 }
 
 #save-toast.visible {
   opacity: 1;
-  transform: translateY(0);
 }
 
 .tile-swatch {
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  padding: 6px 4px;
+  border: 2px solid var(--hud-border);
+  border-radius: 6px;
+  padding: 4px;
   text-align: center;
-  font-size: 11px;
+  font-size: 10px;
   cursor: pointer;
-  background: rgba(0, 0, 0, 0.2);
+  background: #c62828;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -149,12 +175,79 @@ body {
 }
 
 .tile-swatch.active {
-  outline: 2px solid rgba(255, 255, 255, 0.5);
+  border-color: #ffeb3b;
+  background: #b71c1c;
+  box-shadow: inset 0 0 0 2px #ffeb3b;
 }
 
 .tile-swatch canvas {
   width: 24px;
   height: 24px;
+  border-radius: 4px;
   image-rendering: pixelated;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(0, 0, 0, 0.3);
+}
+
+/* Home Screen Styles */
+#home-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #29b6f6;
+  /* Ocean blue */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 24px;
+  z-index: 1000;
+}
+
+/* Add a pseudo-element pattern background for festival feel */
+#home-screen::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: radial-gradient(#d32f2f 4px, transparent 4px);
+  background-size: 48px 48px;
+  opacity: 0.1;
+  pointer-events: none;
+}
+
+.home-btn {
+  padding: 16px 48px;
+  font-family: inherit;
+  font-size: 24px;
+  color: #d32f2f;
+  background: #ffffff;
+  border: 6px solid #d32f2f;
+  border-radius: 32px;
+  cursor: pointer;
+  font-weight: bold;
+  text-transform: uppercase;
+  box-shadow: 0 8px 0 #b71c1c;
+  transition: all 0.1s;
+}
+
+.home-btn:hover {
+  background: #ffeb3b;
+  /* Yellow */
+  color: #b71c1c;
+}
+
+.home-btn:active {
+  box-shadow: 0 0 0 #b71c1c;
+  transform: translateY(8px);
+}
+
+/* Game Container Styles */
+#game-container {
+  display: none;
+  width: 100%;
+  height: 100%;
 }

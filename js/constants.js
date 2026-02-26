@@ -6,30 +6,30 @@ export const HOUSE_WIDTH = 10;
 export const HOUSE_HEIGHT = 6;
 
 export const TILE_TYPES = {
-    sea: { color: "#1b3d6d" },
-    river: { color: "#2c6fba" },
-    grass: { color: "#2e7d32" },
-    field: { color: "#6fa146" },
-    forest: { color: "#1f5a2b" },
-    tree: { color: "#2b6b33" },
-    road: { color: "#9d7b4f" },
-    portNW: { color: "#7c6a54" },
-    portNE: { color: "#7c6a54" },
-    portSW: { color: "#7c6a54" },
-    portSE: { color: "#7c6a54" },
-    portN: { color: "#7c6a54" },
-    portS: { color: "#7c6a54" },
-    portW: { color: "#7c6a54" },
-    portE: { color: "#7c6a54" },
-    portC: { color: "#7c6a54" },
-    portBoat: { color: "#7c6a54" },
-    mountain: { color: "#6b6b6b" },
-    houseWall: { color: "#6a3f2a" },
-    houseFloor: { color: "#a0734e" },
-    houseDoor: { color: "#3f2a1b" },
-    bed: { color: "#8f6bb3" },
-    kitchen: { color: "#c29f6c" },
-    furniture: { color: "#6f5a45" }
+    sea: { color: "#29b6f6" },     // Bright crisp blue
+    river: { color: "#4fc3f7" },   // Lighter blue
+    grass: { color: "#9ccc65" },   // Lush green
+    field: { color: "#dce775" },   // Yellow-green field
+    forest: { color: "#f48fb1" },  // Sakura pink
+    tree: { color: "#66bb6a" },    // Vibrant green
+    road: { color: "#fff59d" },    // Sandy path
+    portNW: { color: "#ffcc80" },  // Light wood/bamboo docks
+    portNE: { color: "#ffcc80" },
+    portSW: { color: "#ffcc80" },
+    portSE: { color: "#ffcc80" },
+    portN: { color: "#ffcc80" },
+    portS: { color: "#ffcc80" },
+    portW: { color: "#ffcc80" },
+    portE: { color: "#ffcc80" },
+    portC: { color: "#ffb74d" },
+    portBoat: { color: "#ffb74d" },
+    mountain: { color: "#b0bec5" },// Blue-gray rocks
+    houseWall: { color: "#ef5350" },// Temple Red
+    houseFloor: { color: "#d7ccc8" },// Stone floor
+    houseDoor: { color: "#5d4037" }, // Dark wood slider
+    bed: { color: "#ce93d8" },     // Pastel purple
+    kitchen: { color: "#ffe082" }, // Warm yellow
+    furniture: { color: "#ffab91" }// Peach/coral
 };
 
 export const TILE_INDEX = {

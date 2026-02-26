@@ -1,16 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta
-      http-equiv="Content-Security-Policy"
-      content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'"
-    />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Ultima-like RPG</title>
-    <link rel="stylesheet" href="styles.css" />
-  </head>
-  <body>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self'" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Champion Island Style</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <div id="home-screen">
+    <button class="home-btn" id="start-btn-1">Movie Theater</button>
+    <button class="home-btn" id="start-btn-2">Free Build</button>
+  </div>
+
+  <div id="game-container">
     <div id="hud">
       <div class="title">Ultima-like RPG Prototype</div>
       <div class="tips">WASD / Arrows move, Shift run, Space jump, Z swing/boat, E equip, X crouch, F edit</div>
@@ -35,6 +44,8 @@
       <canvas id="minimap" width="200" height="200"></canvas>
     </div>
     <canvas id="game"></canvas>
-    <script type="module" src="renderer.js"></script>
-  </body>
+  </div>
+  <script type="module" src="renderer.js"></script>
+</body>
+
 </html>

@@ -59,42 +59,77 @@ export function drawPortTile(tctx, type) {
 }
 
 export function drawHouseTile(tctx, type) {
+    tctx.lineWidth = 2;
+    tctx.strokeStyle = "#000000";
+
     if (type === "houseWall") {
-        tctx.fillStyle = "#5a3826";
+        // Red Japanese Temple Wall
+        tctx.fillStyle = "#ef5350";
         tctx.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
-        tctx.fillStyle = "rgba(255,255,255,0.08)";
-        tctx.fillRect(4, 6, TILE_SIZE - 8, 4);
+        // White stucco trim
+        tctx.fillStyle = "#ffffff";
+        tctx.fillRect(0, TILE_SIZE - 12, TILE_SIZE, 12);
+        tctx.strokeRect(0, TILE_SIZE - 12, TILE_SIZE, 12);
+        // Wooden pillars
+        tctx.fillStyle = "#4e342e";
+        tctx.fillRect(2, 0, 4, TILE_SIZE);
+        tctx.strokeRect(2, 0, 4, TILE_SIZE);
+        tctx.fillRect(TILE_SIZE - 6, 0, 4, TILE_SIZE);
+        tctx.strokeRect(TILE_SIZE - 6, 0, 4, TILE_SIZE);
     } else if (type === "houseFloor") {
-        tctx.fillStyle = "#a0734e";
+        // Tatami mat style / Bamboo
+        tctx.fillStyle = "#dce775";
         tctx.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
-        tctx.fillStyle = "rgba(0,0,0,0.15)";
-        tctx.fillRect(2, 2, TILE_SIZE - 4, TILE_SIZE - 4);
+        tctx.strokeStyle = "rgba(0,0,0,0.1)";
+        tctx.lineWidth = 1;
+        for (let i = 4; i < TILE_SIZE; i += 4) {
+            tctx.strokeRect(i, 2, 8, TILE_SIZE - 4);
+        }
     } else if (type === "houseDoor") {
-        tctx.fillStyle = "#3b2618";
+        // Shoji Screen Door
+        tctx.fillStyle = "#4e342e";
         tctx.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
-        tctx.fillStyle = "#6b4a2a";
-        tctx.fillRect(8, 6, 16, 20);
-        tctx.fillStyle = "#d9b88a";
-        tctx.fillRect(20, 16, 3, 3);
+        tctx.fillStyle = "#fff8e1"; // paper
+        tctx.fillRect(4, 4, 10, 24);
+        tctx.strokeRect(4, 4, 10, 24);
+        tctx.fillRect(18, 4, 10, 24);
+        tctx.strokeRect(18, 4, 10, 24);
+        // grid lines
+        tctx.fillStyle = "#4e342e";
+        for (let i = 10; i < 28; i += 6) {
+            tctx.fillRect(4, i, 10, 2);
+            tctx.fillRect(18, i, 10, 2);
+        }
     } else if (type === "bed") {
-        tctx.fillStyle = "#8f6bb3";
-        tctx.fillRect(4, 6, 24, 14);
-        tctx.fillStyle = "#ede3f6";
-        tctx.fillRect(6, 8, 10, 6);
-        tctx.fillStyle = "#5a3f73";
-        tctx.fillRect(4, 20, 24, 6);
+        // Futon
+        tctx.fillStyle = "#d7ccc8";
+        tctx.fillRect(4, 4, 24, 24);
+        tctx.strokeRect(4, 4, 24, 24);
+        tctx.fillStyle = "#29b6f6"; // blanket
+        tctx.fillRect(4, 12, 24, 16);
+        tctx.strokeRect(4, 12, 24, 16);
+        tctx.fillStyle = "#ffffff"; // pillow
+        tctx.fillRect(10, 6, 12, 4);
+        tctx.strokeRect(10, 6, 12, 4);
     } else if (type === "kitchen") {
-        tctx.fillStyle = "#c29f6c";
-        tctx.fillRect(4, 6, 24, 18);
-        tctx.fillStyle = "#8f6e3e";
-        tctx.fillRect(6, 8, 8, 6);
-        tctx.fillStyle = "#6b4a2a";
-        tctx.fillRect(18, 8, 8, 12);
+        // Wooden counter
+        tctx.fillStyle = "#ffb74d";
+        tctx.fillRect(2, 8, 28, 16);
+        tctx.strokeRect(2, 8, 28, 16);
+        tctx.fillStyle = "#37474f"; // stove
+        tctx.fillRect(4, 10, 8, 8);
+        tctx.strokeRect(4, 10, 8, 8);
     } else if (type === "furniture") {
-        tctx.fillStyle = "#6f5a45";
-        tctx.fillRect(6, 8, 20, 16);
-        tctx.fillStyle = "#3f3124";
-        tctx.fillRect(10, 12, 12, 4);
+        // Low table
+        tctx.fillStyle = "#6d4c41";
+        tctx.fillRect(4, 8, 24, 16);
+        tctx.strokeRect(4, 8, 24, 16);
+        tctx.fillStyle = "#5d4037"; // table border
+        tctx.fillRect(4, 8, 24, 4);
+        // tea cup?
+        tctx.fillStyle = "#9ccc65";
+        tctx.fillRect(14, 4, 4, 4);
+        tctx.strokeRect(14, 4, 4, 4);
     }
 }
 
@@ -128,30 +163,67 @@ export function makeTileSprite(type) {
     }
 
     if (type === "mountain") {
-        tctx.fillStyle = "rgba(0,0,0,0.22)";
+        tctx.strokeStyle = "#000000";
+        tctx.lineWidth = 2;
+        tctx.lineJoin = "round";
+
+        tctx.fillStyle = "#90a4ae";
         tctx.beginPath();
         tctx.moveTo(4, TILE_SIZE - 4);
-        tctx.lineTo(TILE_SIZE * 0.5, 8);
-        tctx.lineTo(TILE_SIZE - 4, TILE_SIZE - 6);
+        tctx.lineTo(TILE_SIZE * 0.5, 6);
+        tctx.lineTo(TILE_SIZE - 4, TILE_SIZE - 4);
         tctx.closePath();
         tctx.fill();
+        tctx.stroke();
+
+        tctx.fillStyle = "#cfd8dc"; // snow cap
+        tctx.beginPath();
+        tctx.moveTo(TILE_SIZE * 0.5, 6);
+        tctx.lineTo(11, 14);
+        tctx.lineTo(21, 14);
+        tctx.closePath();
+        tctx.fill();
+        tctx.stroke();
     }
 
     if (type === "forest") {
-        tctx.fillStyle = "rgba(0,0,0,0.25)";
+        // Cherry blossoms (sakura)
+        tctx.strokeStyle = "#000000";
+        tctx.lineWidth = 2;
+
         tctx.beginPath();
-        tctx.arc(10, 14, 6, 0, Math.PI * 2);
-        tctx.arc(22, 18, 6, 0, Math.PI * 2);
+        tctx.arc(12, 14, 8, 0, Math.PI * 2);
+        tctx.arc(20, 14, 8, 0, Math.PI * 2);
+        tctx.arc(16, 8, 8, 0, Math.PI * 2);
+        tctx.fillStyle = "#f8bbd0"; // light pink
+        tctx.fill();
+        tctx.stroke();
+
+        // petals
+        tctx.fillStyle = "#ff80ab";
+        tctx.beginPath();
+        tctx.arc(10, 16, 4, 0, Math.PI * 2);
+        tctx.arc(22, 16, 4, 0, Math.PI * 2);
         tctx.fill();
     }
 
     if (type === "tree") {
-        tctx.fillStyle = "#1b4a26";
+        tctx.strokeStyle = "#000000";
+        tctx.lineWidth = 2;
+
+        tctx.fillStyle = "#6d4c41"; // trunk
+        tctx.fillRect(14, 20, 4, 8);
+        tctx.strokeRect(14, 20, 4, 8);
+
+        // Bamboo/Pine
+        tctx.fillStyle = "#2e7d32";
         tctx.beginPath();
-        tctx.arc(16, 12, 8, 0, Math.PI * 2);
+        tctx.moveTo(16, 4);
+        tctx.lineTo(6, 20);
+        tctx.lineTo(26, 20);
+        tctx.closePath();
         tctx.fill();
-        tctx.fillStyle = "#3a2b1b";
-        tctx.fillRect(14, 18, 4, 8);
+        tctx.stroke();
     }
 
     if (type === "road") {
@@ -265,6 +337,8 @@ export function drawBoat(ctx, screenX, screenY, camera) {
     const x = Math.round(screenX);
     const y = Math.round(screenY);
     const s = 3.2;
+    state.ctx.lineWidth = 2;
+    state.ctx.strokeStyle = "#000000";
     state.ctx.fillStyle = "#5b3a22";
     state.ctx.beginPath();
     state.ctx.moveTo(x - 10 * s, y + 6 * s);
@@ -273,58 +347,151 @@ export function drawBoat(ctx, screenX, screenY, camera) {
     state.ctx.lineTo(x - 6 * s, y + 12 * s);
     state.ctx.closePath();
     state.ctx.fill();
+    state.ctx.stroke();
     state.ctx.fillStyle = "#9b7a54";
     state.ctx.fillRect(x - 6 * s, y + 2 * s, 12 * s, 4 * s);
+    state.ctx.strokeRect(x - 6 * s, y + 2 * s, 12 * s, 4 * s);
+}
+
+const LUCKY_PALETTE = {
+    '.': null,
+    'K': '#1a1a1a', // Outline
+    'O': '#f57c00', // Orange fur
+    'B': '#37474f', // Black/dark gray fur
+    'W': '#ffffff', // White fur
+    'P': '#f48fb1', // Pink for nose/ears
+    'R': '#d32f2f', // Red scarf
+    'Y': '#fbc02d', // Yellow for bell/accents
+    'L': '#1976d2', // Blue clothes
+    'E': '#000000', // Eyes
+    'S': '#90a4ae', // Sword blade
+};
+
+// 16x16 Base Frame
+const LUCKY_IDLE = [
+    "....KK......KK..",
+    "...KOOK....KBBK.",
+    "...KOPK....KPBK.",
+    "..KOWWKKKKKKWWBK",
+    "..KOWWWWWWWWWWBK",
+    ".KWWWWWWWWWWWWBK",
+    ".KWWWEWWWWWEWWBK",
+    ".KWWWWWWPWWWWWBK",
+    "..KWWWWWWWWWWWK.",
+    "...KKKKKRRYKKK..",
+    "...KLLRRRRRLLK..",
+    "...KWLLLLLLLWK..",
+    "....KWWK.KWWK...",
+    "....KKK...KKK...",
+    "................",
+    "................"
+];
+
+const LUCKY_WALK = [
+    "....KK......KK..",
+    "...KOOK....KBBK.",
+    "...KOPK....KPBK.",
+    "..KOWWKKKKKKWWBK",
+    "..KOWWWWWWWWWWBK",
+    ".KWWWWWWWWWWWWBK",
+    ".KWWWEWWWWWEWWBK",
+    ".KWWWWWWPWWWWWBK",
+    "..KWWWWWWWWWWWK.",
+    "...KKKKKRRYKKK..",
+    "...KLLRRRRRLLK..",
+    "...KWLLLLLLLWK..",
+    "....KWWK...KK...",
+    "....KKK.........",
+    "................",
+    "................"
+];
+
+
+const LUCKY_WALK_2 = [
+    "....KK......KK..",
+    "...KOOK....KBBK.",
+    "...KOPK....KPBK.",
+    "..KOWWKKKKKKWWBK",
+    "..KOWWWWWWWWWWBK",
+    ".KWWWWWWWWWWWWBK",
+    ".KWWWEWWWWWEWWBK",
+    ".KWWWWWWPWWWWWBK",
+    "..KWWWWWWWWWWWK.",
+    "...KKKKKRRYKKK..",
+    "...KLLRRRRRLLK..",
+    "...KWLLLLLLLWK..",
+    "......KK.KWWK...",
+    ".........KKK....",
+    "................",
+    "................"
+];
+
+function drawSprite(ctx, x, y, spriteArr, scale, flip = false) {
+    const height = spriteArr.length;
+    const width = spriteArr[0].length;
+    const px = Math.floor(x - (width * scale) / 2);
+    const py = Math.floor(y - height * scale + scale * 4);
+
+    ctx.save();
+    if (flip) {
+        ctx.translate(px + width * scale, py);
+        ctx.scale(-1, 1);
+    } else {
+        ctx.translate(px, py);
+    }
+
+    for (let r = 0; r < height; r++) {
+        const row = spriteArr[r];
+        for (let c = 0; c < width; c++) {
+            const char = row[c];
+            if (LUCKY_PALETTE[char]) {
+                ctx.fillStyle = LUCKY_PALETTE[char];
+                ctx.fillRect(c * scale, r * scale, scale, scale);
+            }
+        }
+    }
+    ctx.restore();
 }
 
 export function drawPlayer(screenX, screenY, time, playerState) {
     const ctx = state.ctx;
-    const x = Math.round(screenX);
-    const y = Math.round(screenY - playerState.jumpOffset);
-    const s = 2;
+    const s = 3; // pixel scale factor - increased for bigger Lucky!
+
+    // Jump and wobble
+    const curY = Math.round(screenY - playerState.jumpOffset);
+
+    // Animation timing
     const walk = Math.min(1, state.playerSpeed / (BASE_SPEED * 2));
-    const walkSwing = Math.sin(time * 0.02) * 3 * walk * s;
-    const swing = walkSwing + playerState.swing * 6 * s;
-    const crouchScale = playerState.crouch ? 0.75 : 1;
+    const isWalking = walk > 0.1;
 
-    ctx.fillStyle = "#2b1f14";
-    ctx.fillRect(x - 5 * s + swing, y + 8 * s * crouchScale, 3 * s, 6 * s * crouchScale);
-    ctx.fillRect(x + 1 * s - swing, y + 8 * s * crouchScale, 3 * s, 6 * s * crouchScale);
+    // Alternating 4-step walk cycle
+    const walkPhase = Math.floor(time * 0.008) % 4;
+    let frame = LUCKY_IDLE;
 
-    ctx.fillStyle = "#6e3b2d";
-    ctx.fillRect(x - 8 * s, y - 4 * s * crouchScale, 16 * s, 14 * s * crouchScale);
+    if (isWalking) {
+        if (walkPhase === 0) frame = LUCKY_WALK;
+        else if (walkPhase === 1) frame = LUCKY_IDLE;
+        else if (walkPhase === 2) frame = LUCKY_WALK_2;
+        else if (walkPhase === 3) frame = LUCKY_IDLE;
+    }
 
-    ctx.fillStyle = "#c9b29b";
-    ctx.fillRect(x - 10 * s, y - 2 * s * crouchScale + swing, 4 * s, 8 * s * crouchScale);
-    ctx.fillRect(x + 6 * s, y - 2 * s * crouchScale - swing, 4 * s, 8 * s * crouchScale);
-
-    ctx.fillStyle = "#f1d6b5";
-    ctx.beginPath();
-    ctx.arc(x, y - 8 * s * crouchScale, 5 * s, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = "#2f2a24";
-    ctx.fillRect(x - 6 * s, y - 14 * s * crouchScale, 12 * s, 4 * s);
-    ctx.fillRect(x - 4 * s, y - 20 * s * crouchScale, 8 * s, 6 * s);
-
-    ctx.fillStyle = "#3b2b1e";
-    ctx.beginPath();
-    ctx.arc(x - 2 * s, y - 9 * s * crouchScale, 1 * s, 0, Math.PI * 2);
-    ctx.arc(x + 2 * s, y - 9 * s * crouchScale, 1 * s, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = "#b9d7e6";
-    ctx.fillRect(x - 5 * s, y + 1 * s * crouchScale, 10 * s, 7 * s * crouchScale);
-
-    ctx.fillStyle = "#5c3a2c";
-    ctx.fillRect(x - 8 * s, y - 6 * s * crouchScale, 16 * s, 4 * s);
+    drawSprite(ctx, screenX, curY + (playerState.crouch ? 6 : 0), frame, s, false);
 
     if (state.equipped) {
-        ctx.strokeStyle = "#d9d1c4";
-        ctx.lineWidth = 2;
+        const swing = playerState.swing * 15;
+        ctx.lineWidth = 3;
+        ctx.lineJoin = "round";
+        ctx.strokeStyle = LUCKY_PALETTE['K'];
         ctx.beginPath();
-        ctx.moveTo(x + 10 * s, y + 6 * s * crouchScale - swing);
-        ctx.lineTo(x + 18 * s, y + 2 * s * crouchScale - swing);
+        ctx.moveTo(screenX + 10, curY - 5 - swing);
+        ctx.lineTo(screenX + 25, curY - 15 - swing);
+        ctx.stroke();
+
+        ctx.strokeStyle = LUCKY_PALETTE['S'];
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(screenX + 11, curY - 6 - swing);
+        ctx.lineTo(screenX + 24, curY - 14 - swing);
         ctx.stroke();
     }
 }
