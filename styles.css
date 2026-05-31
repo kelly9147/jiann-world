@@ -1,5 +1,5 @@
 :root {
-  --bg: #29b6f6;
+  --bg: #2f6f91;
   /* Ocean blue background color to match edge tiles */
   --hud-bg: #d32f2f;
   /* Festival red */
@@ -211,8 +211,7 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background: #29b6f6;
-  /* Ocean blue */
+  background: #2f6f91;
   display: flex;
   flex-direction: column;
   justify-content: center;

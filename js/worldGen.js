@@ -102,28 +102,36 @@ export function generateBaseTerrain(seed) {
         for (let x = 0; x < WORLD_SIZE; x += 1) {
             const height = fbm(x, y, 1201 + seed);
             const moisture = fbm(x + 200, y - 200, 2201 + seed);
+            const slope = Math.abs(fbm(x + 3, y, 1201 + seed) - fbm(x, y + 3, 1201 + seed));
             const riverNoise = valueNoise(x, y, 32, 3401 + seed);
             const forestNoise = valueNoise(x + 500, y - 300, 48, 4601 + seed);
             const treeNoise = valueNoise(x - 200, y + 700, 10, 5701 + seed);
             const treeCluster = valueNoise(x + 1200, y - 900, 54, 5751 + seed);
             const treeScatter = hash2d(x, y, 5851 + seed);
 
+            let groundType = "grass";
             let type = "grass";
-            if (height < state.seaLevelThreshold) type = "sea";
-            else if (height < state.seaLevelThreshold + 0.1 && moisture > 0.52) type = "river";
-            else if (riverNoise > 0.86 && height < 0.66) type = "river";
-            else if (height > 0.7) type = "mountain";
-            else if (moisture > 0.56) type = "field";
+            const coastBand = state.seaLevelThreshold + 0.065;
+            const foothills = 0.66 + slope * 0.75;
 
-            if (type === "grass" || type === "field") {
+            if (height < state.seaLevelThreshold) groundType = "sea";
+            else if (height < coastBand) groundType = "coast";
+            else if (height < state.seaLevelThreshold + 0.11 && moisture > 0.6) groundType = "river";
+            else if (riverNoise > 0.875 && height < 0.64) groundType = "river";
+            else if (height > foothills) groundType = "mountain";
+            else if (moisture > 0.58) groundType = "field";
+
+            type = groundType;
+
+            if (groundType === "grass" || groundType === "field") {
                 const clustered = treeCluster > 0.45 && treeScatter > 0.25;
-                const scattered = treeNoise > 0.42 || treeScatter > 0.7;
-                if (clustered || scattered) type = "tree";
+                const scattered = treeNoise > 0.48 || treeScatter > 0.78;
+                if (moisture > 0.64 && forestNoise > 0.48) type = "forest";
+                else if (clustered || scattered) type = "tree";
             }
 
-            const idx = TILE_INDEX[type];
-            state.baseMap[y * WORLD_SIZE + x] = idx;
-            state.worldMap[y * WORLD_SIZE + x] = idx;
+            state.baseMap[y * WORLD_SIZE + x] = TILE_INDEX[groundType];
+            state.worldMap[y * WORLD_SIZE + x] = TILE_INDEX[type];
         }
     }
 }

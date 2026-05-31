@@ -11,6 +11,7 @@ import {
   state,
   initState,
   tileAt,
+  baseTileAt,
   isPortTile,
   isWalkableOnFoot,
   isWalkable,
@@ -168,6 +169,87 @@ function tryDisembark() {
 
 // --- Rendering & Update ---
 
+const TERRAIN_HEIGHT = {
+  sea: 0,
+  river: 0,
+  coast: 1,
+  grass: 2,
+  field: 2,
+  forest: 3,
+  mountain: 4
+};
+
+const DIRECTION_TRIANGLES = {
+  north: [[0, 0], [TILE_SIZE, 0], [TILE_SIZE / 2, TILE_SIZE / 2]],
+  east: [[TILE_SIZE, 0], [TILE_SIZE, TILE_SIZE], [TILE_SIZE / 2, TILE_SIZE / 2]],
+  south: [[TILE_SIZE, TILE_SIZE], [0, TILE_SIZE], [TILE_SIZE / 2, TILE_SIZE / 2]],
+  west: [[0, TILE_SIZE], [0, 0], [TILE_SIZE / 2, TILE_SIZE / 2]]
+};
+
+const TERRAIN_DIRECTIONS = [
+  { name: "north", dx: 0, dy: -1 },
+  { name: "east", dx: 1, dy: 0 },
+  { name: "south", dx: 0, dy: 1 },
+  { name: "west", dx: -1, dy: 0 }
+];
+
+function terrainHeight(type) {
+  return TERRAIN_HEIGHT[type] ?? -1;
+}
+
+function terrainTileAt(x, y) {
+  const type = tileAt(x, y);
+  if (type !== "tree") return type;
+
+  const base = baseTileAt(x, y);
+  return terrainHeight(base) >= 0 ? base : "grass";
+}
+
+function hasAdjacentHigherPair(directions) {
+  const names = new Set(directions.map((dir) => dir.name));
+  return (
+    (names.has("north") && names.has("east")) ||
+    (names.has("east") && names.has("south")) ||
+    (names.has("south") && names.has("west")) ||
+    (names.has("west") && names.has("north"))
+  );
+}
+
+function drawClippedTile(type, points, screenX, screenY) {
+  const sprite = state.tileset[type];
+  if (!sprite) return;
+
+  state.ctx.save();
+  state.ctx.beginPath();
+  points.forEach(([px, py], index) => {
+    if (index === 0) state.ctx.moveTo(screenX + px, screenY + py);
+    else state.ctx.lineTo(screenX + px, screenY + py);
+  });
+  state.ctx.closePath();
+  state.ctx.clip();
+  state.ctx.drawImage(sprite, screenX, screenY);
+  state.ctx.restore();
+}
+
+function drawTerrainAutotile(x, y, type, screenX, screenY) {
+  const currentHeight = terrainHeight(type);
+  if (currentHeight < 0) return;
+
+  const higherDirections = TERRAIN_DIRECTIONS
+    .map((dir) => ({
+      ...dir,
+      type: terrainTileAt(x + dir.dx, y + dir.dy)
+    }))
+    .filter((dir) => terrainHeight(dir.type) > currentHeight);
+
+  if (higherDirections.length < 2) return;
+  if (higherDirections.length === 2 && !hasAdjacentHigherPair(higherDirections)) return;
+
+  higherDirections.forEach((dir) => {
+    drawClippedTile(dir.type, DIRECTION_TRIANGLES[dir.name], screenX, screenY);
+  });
+}
+
 function resize() {
   const dpr = window.devicePixelRatio || 1;
   state.canvas.width = Math.floor(window.innerWidth * dpr);
@@ -300,10 +382,15 @@ function render(time) {
   for (let y = startY; y < endY; y += 1) {
     for (let x = startX; x < endX; x += 1) {
       const type = tileAt(x, y);
-      const sprite = state.tileset[type];
-      const screenX = x * TILE_SIZE - state.camera.x;
-      const screenY = y * TILE_SIZE - state.camera.y;
+      const groundType = type === "tree" ? terrainTileAt(x, y) : type;
+      const sprite = state.tileset[groundType];
+      const screenX = Math.round(x * TILE_SIZE - state.camera.x);
+      const screenY = Math.round(y * TILE_SIZE - state.camera.y);
       state.ctx.drawImage(sprite, screenX, screenY);
+      drawTerrainAutotile(x, y, groundType, screenX, screenY);
+      if (type === "tree") {
+        state.ctx.drawImage(state.tileset.tree, screenX, screenY);
+      }
     }
   }
 

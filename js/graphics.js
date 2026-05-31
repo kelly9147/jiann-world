@@ -139,35 +139,50 @@ export function makeTileSprite(type) {
     tileCanvas.height = TILE_SIZE;
     const tctx = tileCanvas.getContext("2d");
 
-    tctx.fillStyle = TILE_TYPES[type].color;
-    tctx.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
+    if (type !== "tree") {
+        tctx.fillStyle = TILE_TYPES[type].color;
+        tctx.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
+    }
 
-    if (type === "grass" || type === "field" || type === "forest" || type === "tree") {
-        tctx.fillStyle = "rgba(0,0,0,0.12)";
-        for (let i = 0; i < 6; i += 1) {
+    if (type === "grass" || type === "field" || type === "forest" || type === "coast") {
+        for (let i = 0; i < 14; i += 1) {
             const seedBase =
-                type === "grass" ? 900 : type === "field" ? 901 : type === "forest" ? 904 : 907;
-            const x = Math.floor(hash2d(i, i * 13, seedBase) * 30);
-            const y = Math.floor(hash2d(i * 7, i * 11, seedBase + 2) * 30);
-            tctx.fillRect(x, y, 2, 2);
+                type === "grass" ? 900 : type === "field" ? 901 : type === "forest" ? 904 : type === "coast" ? 906 : 907;
+            const x = Math.floor(hash2d(i, i * 13, seedBase) * TILE_SIZE);
+            const y = Math.floor(hash2d(i * 7, i * 11, seedBase + 2) * TILE_SIZE);
+            const shade = hash2d(i * 5, i * 3, seedBase + 9) > 0.5 ? "255,255,255" : "0,0,0";
+            tctx.fillStyle = `rgba(${shade},${type === "coast" ? 0.08 : 0.07})`;
+            tctx.fillRect(x, y, type === "coast" ? 3 : 2, 1);
         }
     }
 
+    if (type === "coast") {
+        const grad = tctx.createLinearGradient(0, 0, TILE_SIZE, TILE_SIZE);
+        grad.addColorStop(0, "rgba(255,255,255,0.12)");
+        grad.addColorStop(0.45, "rgba(255,255,255,0)");
+        grad.addColorStop(1, "rgba(80,64,32,0.12)");
+        tctx.fillStyle = grad;
+        tctx.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
+    }
+
     if (type === "sea" || type === "river") {
-        tctx.strokeStyle = "rgba(255,255,255,0.12)";
-        tctx.lineWidth = 2;
-        tctx.beginPath();
-        tctx.moveTo(0, TILE_SIZE * 0.35);
-        tctx.bezierCurveTo(8, 8, 24, 24, TILE_SIZE, TILE_SIZE * 0.65);
-        tctx.stroke();
+        tctx.strokeStyle = type === "sea" ? "rgba(190,220,225,0.16)" : "rgba(225,240,230,0.16)";
+        tctx.lineWidth = 1.5;
+        for (let i = 0; i < 2; i += 1) {
+            const offset = i * 12;
+            tctx.beginPath();
+            tctx.moveTo(-4, TILE_SIZE * 0.35 + offset);
+            tctx.bezierCurveTo(8, 8 + offset, 24, 24 + offset, TILE_SIZE + 4, TILE_SIZE * 0.65 + offset);
+            tctx.stroke();
+        }
     }
 
     if (type === "mountain") {
-        tctx.strokeStyle = "#000000";
-        tctx.lineWidth = 2;
+        tctx.strokeStyle = "rgba(35,35,30,0.45)";
+        tctx.lineWidth = 1.5;
         tctx.lineJoin = "round";
 
-        tctx.fillStyle = "#90a4ae";
+        tctx.fillStyle = "#6f7466";
         tctx.beginPath();
         tctx.moveTo(4, TILE_SIZE - 4);
         tctx.lineTo(TILE_SIZE * 0.5, 6);
@@ -176,7 +191,7 @@ export function makeTileSprite(type) {
         tctx.fill();
         tctx.stroke();
 
-        tctx.fillStyle = "#cfd8dc"; // snow cap
+        tctx.fillStyle = "#b7b7a2";
         tctx.beginPath();
         tctx.moveTo(TILE_SIZE * 0.5, 6);
         tctx.lineTo(11, 14);
@@ -184,39 +199,38 @@ export function makeTileSprite(type) {
         tctx.closePath();
         tctx.fill();
         tctx.stroke();
+
+        tctx.strokeStyle = "rgba(0,0,0,0.18)";
+        tctx.beginPath();
+        tctx.moveTo(TILE_SIZE * 0.5, 9);
+        tctx.lineTo(13, TILE_SIZE - 6);
+        tctx.moveTo(TILE_SIZE * 0.58, 14);
+        tctx.lineTo(24, TILE_SIZE - 6);
+        tctx.stroke();
     }
 
     if (type === "forest") {
-        // Cherry blossoms (sakura)
-        tctx.strokeStyle = "#000000";
-        tctx.lineWidth = 2;
-
-        tctx.beginPath();
-        tctx.arc(12, 14, 8, 0, Math.PI * 2);
-        tctx.arc(20, 14, 8, 0, Math.PI * 2);
-        tctx.arc(16, 8, 8, 0, Math.PI * 2);
-        tctx.fillStyle = "#f8bbd0"; // light pink
-        tctx.fill();
-        tctx.stroke();
-
-        // petals
-        tctx.fillStyle = "#ff80ab";
-        tctx.beginPath();
-        tctx.arc(10, 16, 4, 0, Math.PI * 2);
-        tctx.arc(22, 16, 4, 0, Math.PI * 2);
-        tctx.fill();
+        tctx.fillStyle = "#2f5631";
+        for (let i = 0; i < 4; i += 1) {
+            const x = 7 + (i % 2) * 10;
+            const y = 9 + Math.floor(i / 2) * 7;
+            tctx.beginPath();
+            tctx.arc(x, y, 6, 0, Math.PI * 2);
+            tctx.fill();
+        }
+        tctx.fillStyle = "rgba(210,225,190,0.12)";
+        tctx.fillRect(7, 8, 13, 2);
     }
 
     if (type === "tree") {
-        tctx.strokeStyle = "#000000";
-        tctx.lineWidth = 2;
+        tctx.strokeStyle = "rgba(35,24,16,0.45)";
+        tctx.lineWidth = 1.5;
 
-        tctx.fillStyle = "#6d4c41"; // trunk
+        tctx.fillStyle = "#5f452e";
         tctx.fillRect(14, 20, 4, 8);
         tctx.strokeRect(14, 20, 4, 8);
 
-        // Bamboo/Pine
-        tctx.fillStyle = "#2e7d32";
+        tctx.fillStyle = "#315f34";
         tctx.beginPath();
         tctx.moveTo(16, 4);
         tctx.lineTo(6, 20);
@@ -227,8 +241,10 @@ export function makeTileSprite(type) {
     }
 
     if (type === "road") {
-        tctx.fillStyle = "rgba(0,0,0,0.2)";
-        tctx.fillRect(0, TILE_SIZE * 0.45, TILE_SIZE, 3);
+        tctx.fillStyle = "rgba(255,244,210,0.12)";
+        tctx.fillRect(0, TILE_SIZE * 0.42, TILE_SIZE, 2);
+        tctx.fillStyle = "rgba(65,48,30,0.12)";
+        tctx.fillRect(0, TILE_SIZE * 0.56, TILE_SIZE, 2);
     }
 
     if (type.startsWith("port")) {
@@ -253,6 +269,7 @@ export function buildPalette() {
     const tileOrder = [
         "erase",
         "grass",
+        "coast",
         "field",
         "tree",
         "road",
